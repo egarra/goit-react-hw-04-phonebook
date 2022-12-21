@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { Section } from './Section/Section';
 import { Form } from './Form/Form';
 import { Contacts } from './Contacts/Contacts';
@@ -6,84 +6,56 @@ import { nanoid } from 'nanoid';
 import { Filter } from './Filter/Filter';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState(() => {
+    return JSON.parse(localStorage.getItem("contacts")) ?? [];
+  });
+  const [ filter, setFilter] = useState('')
 
-  componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parsedContacts = JSON.parse(contacts);
+  useEffect(() => {
+    window.localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]); 
 
-    if(parsedContacts) {
-      this.setState({contacts: parsedContacts})
-    }
-  }
-
-  componentDidUpdate(prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts))
-    }
-  }
-
-  onFormSubmit = (name, number) => {
+const onFormSubmit = (name, number) => {
     const contact = {
       name,
       number,
       id: nanoid(),
     };
 
-    if (
-      this.state.contacts.find(
-        contact => contact.name.toLowerCase() === name.toLowerCase()
-      )
+    if (contacts.find(
+      contact => contact.name.toLowerCase() === name.toLowerCase()
+    )
     ) {
       Notify.failure('Contact with such name is already exist');
     } else {
-      this.setState(prevState => ({
-        contacts: [...prevState.contacts, contact],
-      }));
-      Notify.success('Contact is added');
+      setContacts([contact, ...contacts])
     }
-  };
-
-  onDeleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
-    Notify.success('Contact is Deleted');
-  };
-
-  onSearchByName = () => {
-    const { contacts, filter } = this.state;
-    return contacts.filter(contact =>
-      contact.name.toUpperCase().includes(filter.toUpperCase())
-    );
-  };
-
-  onInputChange = filter => {
-    this.setState({
-      filter,
-    });
-  };
-
-  render() {
-    const filteredToDos = this.onSearchByName();
-    return (
-      <>
-        <Section title="Phonebook">
-          <Form onFormSubmit={this.onFormSubmit} />
-        </Section>
-        <Section title="Contacts">
-          <Filter onInputChange={this.onInputChange} />
-          {this.state.contacts.length > 0 
-            ? <Contacts
-            contactsList={filteredToDos}
-            onDeleteContact={this.onDeleteContact}
-          /> : null}
-        </Section>
-      </>
-    );
   }
+
+const onDeleteContact = id => {
+  setContacts(contacts.filter(contact => contact.id !== id))
+  Notify.success('Contact is Deleted');
 }
+
+const onSearchByName = () => contacts.filter(contact =>
+  contact.name.toLowerCase().includes(filter.toLowerCase())
+);
+
+const onInputChange = filter => {
+  setFilter(filter)
+}
+ 
+  const filteredContacts = onSearchByName();
+  return (
+    <>
+      <Section title="Phonebook">
+        <Form onFormSubmit={onFormSubmit} />
+      </Section>
+      <Section title="Contacts">
+        <Filter onInputChange={onInputChange} />
+      {contacts.length > 0 && <Contacts contactsList={filteredContacts} onDeleteContact={onDeleteContact} />}
+      </Section>
+    </>
+  );
+};

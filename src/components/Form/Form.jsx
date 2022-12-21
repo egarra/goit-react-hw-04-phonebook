@@ -1,29 +1,27 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { InputForm, Btn, InputField } from './Form.styled';
 
-export class Form extends Component {
-  state = {
-    nameValue: '',
-    phoneValue: '',
+export const Form = ({onFormSubmit}) => {
+  const [name, setName] = useState('')
+  const [number, setNumber] = useState('')
+
+  const inputChange = event => {
+    if (event.target.name === 'name') {
+      setName(event.target.value)
+    } else {
+      setNumber(event.target.value)
+    }
   };
 
-  inputChange = event => {
-    this.setState(
-      event.target.name === 'name'
-        ? { nameValue: event.target.value }
-        : { phoneValue: event.target.value }
-    );
-  };
-
-  handleSubmit = event => {
+  const handleSubmit = event => {
     event.preventDefault();
-    this.props.onFormSubmit(this.state.nameValue, this.state.phoneValue);
+    onFormSubmit(name, number);
     event.target.reset();
   };
 
-  render() {
+
     return (
-      <InputForm onSubmit={this.handleSubmit}>
+      <InputForm onSubmit={handleSubmit}>
         <p>Name</p>
         <InputField
           placeholder="name"
@@ -32,7 +30,7 @@ export class Form extends Component {
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
           required
-          onChange={this.inputChange}
+          onChange={inputChange}
         />
         <p>Number</p>
         <InputField
@@ -42,10 +40,10 @@ export class Form extends Component {
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
           required
-          onChange={this.inputChange}
+          onChange={inputChange}
         />
         <Btn type="submit">Add contact</Btn>
       </InputForm>
     );
   }
-}
+
